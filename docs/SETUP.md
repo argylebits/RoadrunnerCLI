@@ -108,7 +108,7 @@ gump run \
   --image gump-runner:latest
 ```
 
-The daemon will loop: register a runner, wait for a job, run it, clean up, repeat. Ctrl-C to stop gracefully (waits for current job to finish). Ctrl-C again to force quit.
+The daemon will loop: register a runner, wait for a job, run it, clean up, repeat. Ctrl-C to stop gracefully (stops the container and exits). Ctrl-C again to force quit.
 
 ### One-off run (manual token)
 
@@ -200,7 +200,9 @@ tail -f /tmp/gump.err
 
 ## Workflow Configuration
 
-With the `gump-runner:latest` image, Swift is pre-installed. Your workflow files just need:
+Gump runs any GitHub Actions workflow — it's language-agnostic. Just set `runs-on: [self-hosted, linux]`.
+
+The `gump-runner:latest` image has Swift pre-installed:
 
 ```yaml
 jobs:
@@ -211,7 +213,19 @@ jobs:
       - run: swift test
 ```
 
-No Swift installation step required.
+For other languages, the same image works — Python is included in Ubuntu, and you can install anything else in a workflow step:
+
+```yaml
+jobs:
+  test:
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -r requirements.txt
+      - run: pytest
+```
+
+See `docs/workflow-templates/` for ready-to-use examples.
 
 ## Updating
 
@@ -231,10 +245,19 @@ launchctl load ~/Library/LaunchAgents/com.argylebits.gump.plist
 
 ```bash
 cd /path/to/Gump/images
-# Edit the Containerfile if needed
 container build --no-cache -t gump-runner:latest -f Containerfile -m 4G .
 # Restart gump — the next container will use the new image
 ```
+
+#### Keeping the image up to date
+
+The `gump-runner:latest` image pins to `swiftly install latest` and the latest `actions/runner` at build time. Options for staying current:
+
+- **Manual rebuild** — run `container build --no-cache ...` when you want a new Swift version. Simplest approach; Swift releases are infrequent.
+- **Scheduled rebuild** — create a cron job or launchd timer that rebuilds the image weekly/monthly.
+- **Version pinning** — edit the Containerfile to pin specific Swift and runner versions, update intentionally.
+
+The image only needs rebuilding when Swift releases a new version or `actions/runner` has a breaking change.
 
 ### Update the container system
 
