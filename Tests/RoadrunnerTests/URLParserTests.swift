@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import gump
+@testable import roadrunner
 
 @Suite("URL Parsing")
 struct URLParserTests {
@@ -51,14 +51,14 @@ struct URLParserTests {
 
     @Test("Rejects non-GitHub URL")
     func rejectsNonGitHub() {
-        #expect(throws: GumpError.self) {
+        #expect(throws: RoadrunnerError.self) {
             try RunnerTarget.parse(url: "https://gitlab.com/owner/repo")
         }
     }
 
     @Test("Rejects invalid URL")
     func rejectsInvalid() {
-        #expect(throws: GumpError.self) {
+        #expect(throws: RoadrunnerError.self) {
             try RunnerTarget.parse(url: "not-a-url")
         }
     }

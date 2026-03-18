@@ -1,8 +1,8 @@
-# Swift CI — runs on a Gump self-hosted Linux runner
+# Swift CI — runs on a Roadrunner self-hosted Linux runner
 #
 # Prerequisites:
-#   - Gump daemon running (`gump run ...`)
-#   - gump-runner:latest image built (has Swift pre-installed)
+#   - Roadrunner daemon running (`roadrunner run ...`)
+#   - roadrunner:latest image built (has Swift pre-installed)
 #
 # Usage:
 #   Copy this file to your repo at .github/workflows/swift-test.yml

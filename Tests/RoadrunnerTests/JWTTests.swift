@@ -1,7 +1,7 @@
 import Testing
 @preconcurrency import Foundation
 @preconcurrency import Security
-@testable import gump
+@testable import roadrunner
 
 @Suite("JWT Generation")
 struct JWTTests {

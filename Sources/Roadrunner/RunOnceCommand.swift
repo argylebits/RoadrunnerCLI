@@ -28,10 +28,10 @@ struct RunOnceCommand: AsyncParsableCommand {
     mutating func run() async throws {
         try Preflight.check()
 
-        let config = GumpConfig.load()
+        let config = RoadrunnerConfig.load()
 
         let labels = labels ?? config.labels ?? "self-hosted,linux"
-        let image = image ?? config.image ?? "ghcr.io/argylebits/gump-runner:latest"
+        let image = image ?? config.image ?? "ghcr.io/argylebits/roadrunner:latest"
         let cpus = cpus ?? config.cpus ?? 2
         let memory = memory ?? config.memory ?? 4096
 

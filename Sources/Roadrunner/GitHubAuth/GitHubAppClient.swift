@@ -23,16 +23,16 @@ struct GitHubAppClient {
         let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw GumpError.gitHubAPIError("Invalid response")
+            throw RoadrunnerError.gitHubAPIError("Invalid response")
         }
         guard httpResponse.statusCode == 201 else {
             let body = String(data: data, encoding: .utf8) ?? ""
-            throw GumpError.gitHubAPIError("Failed to get registration token (HTTP \(httpResponse.statusCode)): \(body)")
+            throw RoadrunnerError.gitHubAPIError("Failed to get registration token (HTTP \(httpResponse.statusCode)): \(body)")
         }
 
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let token = json?["token"] as? String else {
-            throw GumpError.gitHubAPIError("Unexpected response format")
+            throw RoadrunnerError.gitHubAPIError("Unexpected response format")
         }
 
         return token
@@ -46,7 +46,7 @@ enum RunnerTarget {
     static func parse(url urlString: String) throws -> RunnerTarget {
         guard let url = URL(string: urlString),
               url.host() == "github.com" else {
-            throw GumpError.invalidURL(urlString)
+            throw RoadrunnerError.invalidURL(urlString)
         }
 
         let components = url.pathComponents.filter { $0 != "/" }
@@ -60,7 +60,7 @@ enum RunnerTarget {
                 : components[1]
             return .repo(owner: components[0], name: repo)
         default:
-            throw GumpError.invalidURL(urlString)
+            throw RoadrunnerError.invalidURL(urlString)
         }
     }
 }

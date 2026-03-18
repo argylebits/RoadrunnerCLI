@@ -34,24 +34,24 @@ struct RunCommand: AsyncParsableCommand {
     mutating func run() async throws {
         try Preflight.check()
 
-        let config = GumpConfig.load()
+        let config = RoadrunnerConfig.load()
 
         // Merge CLI flags over config file values
         guard let appId = appId ?? config.appId else {
-            throw GumpError.missingConfig("app-id")
+            throw RoadrunnerError.missingConfig("app-id")
         }
         guard let installationId = installationId ?? config.installationId else {
-            throw GumpError.missingConfig("installation-id")
+            throw RoadrunnerError.missingConfig("installation-id")
         }
         guard let privateKey = privateKey ?? config.privateKey else {
-            throw GumpError.missingConfig("private-key")
+            throw RoadrunnerError.missingConfig("private-key")
         }
         guard let url = url ?? config.url else {
-            throw GumpError.missingConfig("url")
+            throw RoadrunnerError.missingConfig("url")
         }
 
         let labels = labels ?? config.labels ?? "self-hosted,linux"
-        let image = image ?? config.image ?? "ghcr.io/argylebits/gump-runner:latest"
+        let image = image ?? config.image ?? "ghcr.io/argylebits/roadrunner:latest"
         let cpus = cpus ?? config.cpus ?? 2
         let memory = memory ?? config.memory ?? 4096
 
@@ -67,10 +67,10 @@ struct RunCommand: AsyncParsableCommand {
         case .org(let name): targetDesc = "\(name) (org)"
         }
 
-        print("[gump] Starting daemon mode...")
-        print("[gump] GitHub App ID: \(appId), Installation ID: \(installationId)")
-        print("[gump] Target: \(targetDesc)")
-        print("[gump] Image: \(image)")
+        print("[roadrunner] Starting daemon mode...")
+        print("[roadrunner] GitHub App ID: \(appId), Installation ID: \(installationId)")
+        print("[roadrunner] Target: \(targetDesc)")
+        print("[roadrunner] Image: \(image)")
 
         // Graceful shutdown on SIGINT/SIGTERM
         let shouldStop = ManagedAtomic(false)
@@ -79,13 +79,13 @@ struct RunCommand: AsyncParsableCommand {
         let sigintSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
         sigintSource.setEventHandler {
             if shouldStop.value {
-                print("\n[gump] Force quitting...")
+                print("\n[roadrunner] Force quitting...")
                 _exit(1)
             }
-            print("\n[gump] Received SIGINT, shutting down...")
+            print("\n[roadrunner] Received SIGINT, shutting down...")
             shouldStop.value = true
             if let name = currentContainerName.value {
-                print("[gump] Stopping container \(name)...")
+                print("[roadrunner] Stopping container \(name)...")
                 ContainerRunner.stopContainer(name: name)
             }
         }
@@ -94,7 +94,7 @@ struct RunCommand: AsyncParsableCommand {
 
         let sigtermSource = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
         sigtermSource.setEventHandler {
-            print("\n[gump] Received SIGTERM, shutting down...")
+            print("\n[roadrunner] Received SIGTERM, shutting down...")
             shouldStop.value = true
             if let name = currentContainerName.value {
                 ContainerRunner.stopContainer(name: name)
@@ -105,7 +105,7 @@ struct RunCommand: AsyncParsableCommand {
 
         while !shouldStop.value {
             do {
-                print("[gump] Requesting runner registration token...")
+                print("[roadrunner] Requesting runner registration token...")
                 let registrationToken = try await client.getRegistrationToken()
 
                 let runner = ContainerRunner(
@@ -123,23 +123,23 @@ struct RunCommand: AsyncParsableCommand {
                 currentContainerName.value = nil
 
                 if exitCode != 0 && !shouldStop.value {
-                    print("[gump] Runner exited with code \(exitCode)")
+                    print("[roadrunner] Runner exited with code \(exitCode)")
                 }
             } catch {
                 if !shouldStop.value {
-                    print("[gump] Error: \(error)")
-                    print("[gump] Retrying in 10 seconds...")
+                    print("[roadrunner] Error: \(error)")
+                    print("[roadrunner] Retrying in 10 seconds...")
                     try? await Task.sleep(for: .seconds(10))
                 }
             }
 
             if !shouldStop.value {
-                print("[gump] Starting next runner in 2 seconds...")
+                print("[roadrunner] Starting next runner in 2 seconds...")
                 try? await Task.sleep(for: .seconds(2))
             }
         }
 
-        print("[gump] Daemon stopped.")
+        print("[roadrunner] Daemon stopped.")
 
         // Keep sources alive
         withExtendedLifetime((sigintSource, sigtermSource)) {}

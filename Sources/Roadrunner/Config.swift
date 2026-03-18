@@ -1,6 +1,6 @@
 import Foundation
 
-struct GumpConfig: Codable {
+struct RoadrunnerConfig: Codable {
     var appId: Int?
     var installationId: Int?
     var privateKey: String?
@@ -11,28 +11,28 @@ struct GumpConfig: Codable {
     var memory: Int?
 
     static let configDir: URL = {
-        FileManager.default.homeDirectoryForCurrentUser.appending(path: ".gump")
+        FileManager.default.homeDirectoryForCurrentUser.appending(path: ".roadrunner")
     }()
 
     static let configPath: URL = {
         configDir.appending(path: "config.yaml")
     }()
 
-    static func load() -> GumpConfig {
+    static func load() -> RoadrunnerConfig {
         loadFrom(path: configPath.path())
     }
 
-    static func loadFrom(path: String) -> GumpConfig {
+    static func loadFrom(path: String) -> RoadrunnerConfig {
         guard FileManager.default.fileExists(atPath: path),
               let contents = try? String(contentsOfFile: path, encoding: .utf8) else {
-            return GumpConfig()
+            return RoadrunnerConfig()
         }
         return parse(yaml: contents)
     }
 
     /// Minimal YAML parser for flat key-value config
-    private static func parse(yaml: String) -> GumpConfig {
-        var config = GumpConfig()
+    private static func parse(yaml: String) -> RoadrunnerConfig {
+        var config = RoadrunnerConfig()
         for line in yaml.components(separatedBy: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }

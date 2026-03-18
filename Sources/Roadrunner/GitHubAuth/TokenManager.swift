@@ -27,17 +27,17 @@ actor TokenManager {
         let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw GumpError.gitHubAPIError("Invalid response")
+            throw RoadrunnerError.gitHubAPIError("Invalid response")
         }
         guard httpResponse.statusCode == 201 else {
             let body = String(data: data, encoding: .utf8) ?? ""
-            throw GumpError.gitHubAPIError("Failed to get installation token (HTTP \(httpResponse.statusCode)): \(body)")
+            throw RoadrunnerError.gitHubAPIError("Failed to get installation token (HTTP \(httpResponse.statusCode)): \(body)")
         }
 
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let token = json?["token"] as? String,
               let expiresAtString = json?["expires_at"] as? String else {
-            throw GumpError.gitHubAPIError("Unexpected response format")
+            throw RoadrunnerError.gitHubAPIError("Unexpected response format")
         }
 
         let formatter = ISO8601DateFormatter()

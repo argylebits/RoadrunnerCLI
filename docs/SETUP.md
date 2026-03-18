@@ -1,4 +1,4 @@
-# Gump Setup Guide
+# Roadrunner Setup Guide
 
 ## Prerequisites
 
@@ -35,10 +35,10 @@ Say **Y** when prompted to install the default kernel.
 container run --rm ubuntu:24.04 echo "hello"
 ```
 
-### 3. Build Gump
+### 3. Build Roadrunner
 
 ```bash
-cd /path/to/Gump
+cd /path/to/Roadrunner
 swift build -c release
 ```
 
@@ -46,14 +46,14 @@ Copy the binary somewhere permanent:
 
 ```bash
 sudo mkdir -p /usr/local/bin
-sudo cp .build/release/gump /usr/local/bin/gump
+sudo cp .build/release/roadrunner /usr/local/bin/roadrunner
 ```
 
 ### 4. Build the custom runner image
 
 ```bash
 cd images
-container build -t ghcr.io/argylebits/gump-runner:latest -f Containerfile -m 4G .
+container build -t ghcr.io/argylebits/roadrunner:latest -f Containerfile -m 4G .
 ```
 
 This takes a few minutes (downloads Swift ~950MB). The image is cached locally after the first build.
@@ -61,7 +61,7 @@ This takes a few minutes (downloads Swift ~950MB). The image is cached locally a
 ### 5. Create a GitHub App
 
 1. Go to https://github.com/settings/apps/new
-2. Name: "Gump Runner" (or whatever you like)
+2. Name: "Roadrunner" (or whatever you like)
 3. Homepage URL: anything
 4. **Uncheck** "Active" under Webhook
 5. Permissions: **Self-hosted runners → Read & write**
@@ -73,24 +73,24 @@ This takes a few minutes (downloads Swift ~950MB). The image is cached locally a
    - Click "Install" on your target org or repo
    - Note the **Installation ID** from the URL: `https://github.com/settings/installations/<INSTALLATION_ID>`
 
-### 6. Configure Gump
+### 6. Configure Roadrunner
 
 Create the config directory and move your private key:
 
 ```bash
-mkdir -p ~/.gump
-mv ~/Downloads/your-app-name.*.private-key.pem ~/.gump/private-key.pem
-chmod 600 ~/.gump/private-key.pem
+mkdir -p ~/.roadrunner
+mv ~/Downloads/your-app-name.*.private-key.pem ~/.roadrunner/private-key.pem
+chmod 600 ~/.roadrunner/private-key.pem
 ```
 
-Create `~/.gump/config.yaml` with your values:
+Create `~/.roadrunner/config.yaml` with your values:
 
 ```yaml
 app-id: 12345
 installation-id: 67890
-private-key: ~/.gump/private-key.pem
+private-key: ~/.roadrunner/private-key.pem
 url: https://github.com/your-org
-image: ghcr.io/argylebits/gump-runner:latest
+image: ghcr.io/argylebits/roadrunner:latest
 labels: self-hosted,linux
 cpus: 2
 memory: 4096
@@ -103,18 +103,18 @@ An example config is at `docs/config.example.yaml`.
 With a config file in place:
 
 ```bash
-gump run
+roadrunner run
 ```
 
 Or with explicit flags (these override config values):
 
 ```bash
-gump run \
+roadrunner run \
   --app-id <APP_ID> \
   --installation-id <INSTALLATION_ID> \
-  --private-key ~/.gump/private-key.pem \
+  --private-key ~/.roadrunner/private-key.pem \
   --url https://github.com/<org-or-owner/repo> \
-  --image ghcr.io/argylebits/gump-runner:latest
+  --image ghcr.io/argylebits/roadrunner:latest
 ```
 
 The daemon will loop: register a runner, wait for a job, run it, clean up, repeat. Ctrl-C to stop gracefully (stops the container and exits). Ctrl-C again to force quit.
@@ -128,10 +128,10 @@ For quick testing without a GitHub App:
 3. Run:
 
 ```bash
-gump run-once \
+roadrunner run-once \
   --token <TOKEN> \
   --url https://github.com/<org-or-owner/repo> \
-  --image ghcr.io/argylebits/gump-runner:latest
+  --image ghcr.io/argylebits/roadrunner:latest
 ```
 
 ## Running as a Background Service (launchd)
@@ -146,7 +146,7 @@ The container CLI registers itself with launchd automatically when you run `cont
 
 ### 2. Create the launchd plist
 
-Create `~/Library/LaunchAgents/com.argylebits.gump.plist`:
+Create `~/Library/LaunchAgents/com.argylebits.roadrunner.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -154,11 +154,11 @@ Create `~/Library/LaunchAgents/com.argylebits.gump.plist`:
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.argylebits.gump</string>
+    <string>com.argylebits.roadrunner</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/gump</string>
+        <string>/usr/local/bin/roadrunner</string>
         <string>run</string>
     </array>
 
@@ -169,49 +169,49 @@ Create `~/Library/LaunchAgents/com.argylebits.gump.plist`:
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/tmp/gump.log</string>
+    <string>/tmp/roadrunner.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/tmp/gump.err</string>
+    <string>/tmp/roadrunner.err</string>
 </dict>
 </plist>
 ```
 
-All configuration is read from `~/.gump/config.yaml`.
+All configuration is read from `~/.roadrunner/config.yaml`.
 
 ### 3. Load the service
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.argylebits.gump.plist
+launchctl load ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
 ```
 
 ### 4. Verify it's running
 
 ```bash
-launchctl list | grep gump
-tail -f /tmp/gump.log
+launchctl list | grep roadrunner
+tail -f /tmp/roadrunner.log
 ```
 
 ### 5. Managing the service
 
 ```bash
 # Stop
-launchctl unload ~/Library/LaunchAgents/com.argylebits.gump.plist
+launchctl unload ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
 
 # Restart (unload then load)
-launchctl unload ~/Library/LaunchAgents/com.argylebits.gump.plist
-launchctl load ~/Library/LaunchAgents/com.argylebits.gump.plist
+launchctl unload ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
+launchctl load ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
 
 # View logs
-tail -f /tmp/gump.log
-tail -f /tmp/gump.err
+tail -f /tmp/roadrunner.log
+tail -f /tmp/roadrunner.err
 ```
 
 ## Workflow Configuration
 
-Gump runs any GitHub Actions workflow — it's language-agnostic. Just set `runs-on: [self-hosted, linux]`.
+Roadrunner runs any GitHub Actions workflow — it's language-agnostic. Just set `runs-on: [self-hosted, linux]`.
 
-The `ghcr.io/argylebits/gump-runner:latest` image has Swift pre-installed:
+The `ghcr.io/argylebits/roadrunner:latest` image has Swift pre-installed:
 
 ```yaml
 jobs:
@@ -238,29 +238,29 @@ See `docs/workflow-templates/` for ready-to-use examples.
 
 ## Updating
 
-### Update Gump
+### Update Roadrunner
 
 ```bash
-cd /path/to/Gump
+cd /path/to/Roadrunner
 git pull
 swift build -c release
-sudo cp .build/release/gump /usr/local/bin/gump
+sudo cp .build/release/roadrunner /usr/local/bin/roadrunner
 # Restart the service if running via launchd
-launchctl unload ~/Library/LaunchAgents/com.argylebits.gump.plist
-launchctl load ~/Library/LaunchAgents/com.argylebits.gump.plist
+launchctl unload ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
+launchctl load ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
 ```
 
 ### Update the runner image (new Swift version, etc.)
 
 ```bash
-cd /path/to/Gump/images
-container build --no-cache -t ghcr.io/argylebits/gump-runner:latest -f Containerfile -m 4G .
-# Restart gump — the next container will use the new image
+cd /path/to/Roadrunner/images
+container build --no-cache -t ghcr.io/argylebits/roadrunner:latest -f Containerfile -m 4G .
+# Restart roadrunner — the next container will use the new image
 ```
 
 #### Keeping the image up to date
 
-The `ghcr.io/argylebits/gump-runner:latest` image pins to `swiftly install latest` and the latest `actions/runner` at build time. Options for staying current:
+The `ghcr.io/argylebits/roadrunner:latest` image pins to `swiftly install latest` and the latest `actions/runner` at build time. Options for staying current:
 
 - **Manual rebuild** — run `container build --no-cache ...` when you want a new Swift version. Simplest approach; Swift releases are infrequent.
 - **Scheduled rebuild** — create a cron job or launchd timer that rebuilds the image weekly/monthly.

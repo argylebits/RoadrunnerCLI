@@ -1,12 +1,12 @@
-# Gump configuration
-# Copy to ~/.gump/config.yaml and fill in your values.
+# Roadrunner configuration
+# Copy to ~/.roadrunner/config.yaml and fill in your values.
 # CLI flags override these values.
 
 app-id: 12345
 installation-id: 67890
-private-key: ~/.gump/private-key.pem
+private-key: ~/.roadrunner/private-key.pem
 url: https://github.com/your-org
-image: ghcr.io/argylebits/gump-runner:latest
+image: ghcr.io/argylebits/roadrunner:latest
 labels: self-hosted,linux
 cpus: 2
 memory: 4096

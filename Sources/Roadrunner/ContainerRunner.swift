@@ -23,14 +23,14 @@ struct ContainerRunner {
     let memoryMB: Int
 
     func run(onStart: ((_ containerName: String, _ process: Process) -> Void)? = nil) async throws -> Int32 {
-        let containerName = "gump-\(UUID().uuidString.prefix(8).lowercased())"
+        let containerName = "roadrunner-\(UUID().uuidString.prefix(8).lowercased())"
 
         guard let bundledScript = Bundle.module.url(forResource: "runner-boot", withExtension: "sh") else {
-            throw GumpError.missingBootScript
+            throw RoadrunnerError.missingBootScript
         }
         let bootScript = try String(contentsOf: bundledScript, encoding: .utf8)
 
-        print("[gump] Starting container \(containerName)...")
+        print("[roadrunner] Starting container \(containerName)...")
 
         let process = Process()
         process.executableURL = URL(filePath: Self.containerCLI)
@@ -60,7 +60,7 @@ struct ContainerRunner {
             }
         }
 
-        print("[gump] Container \(containerName) exited with code \(exitCode)")
+        print("[roadrunner] Container \(containerName) exited with code \(exitCode)")
         return exitCode
     }
 
@@ -76,7 +76,7 @@ struct ContainerRunner {
     }
 }
 
-enum GumpError: Error, CustomStringConvertible {
+enum RoadrunnerError: Error, CustomStringConvertible {
     case missingBootScript
     case containerFailed(Int32)
     case invalidPrivateKey(String)
@@ -100,7 +100,7 @@ enum GumpError: Error, CustomStringConvertible {
         case .invalidURL(let url):
             "Invalid GitHub URL: \(url). Expected https://github.com/owner/repo or https://github.com/org"
         case .missingConfig(let field):
-            "Missing required config: --\(field) (set via CLI flag or ~/.gump/config.yaml)"
+            "Missing required config: --\(field) (set via CLI flag or ~/.roadrunner/config.yaml)"
         }
     }
 }

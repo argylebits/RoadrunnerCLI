@@ -1,8 +1,8 @@
-# Gump
+# Roadrunner
 
-Ephemeral Linux CI runners on macOS. Run, Forrest, run!
+Ephemeral Linux CI runners on macOS. Beep beep!
 
-Gump spins up throwaway Linux containers on your Mac (via Apple's [Containerization framework](https://github.com/apple/containerization)), runs a GitHub Actions job inside each one, and destroys it when done. No persistent runners, no stale state, no Docker required.
+Roadrunner spins up throwaway Linux containers on your Mac (via Apple's [Containerization framework](https://github.com/apple/containerization)), runs a GitHub Actions job inside each one, and destroys it when done. No persistent runners, no stale state, no Docker required.
 
 ## How It Works
 
@@ -10,7 +10,7 @@ Gump spins up throwaway Linux containers on your Mac (via Apple's [Containerizat
 GitHub Actions triggers a job
         |
         v
-  Gump daemon picks it up
+  Roadrunner daemon picks it up
         |
         v
   Fresh Linux container boots (~seconds)
@@ -30,17 +30,15 @@ Each job gets a clean environment. Nothing leaks between runs.
 ## Quick Start
 
 ```bash
-# Build
-swift build -c release
-sudo cp .build/release/gump /usr/local/bin/gump
+# Install
+brew tap argylebits/tap
+brew install roadrunner
 
 # Configure
-mkdir -p ~/.gump
-cp docs/config.example.yaml ~/.gump/config.yaml
-# Edit ~/.gump/config.yaml with your GitHub App credentials
+roadrunner init
 
-# Run (pulls the runner image automatically on first launch)
-gump run
+# Run
+roadrunner run
 ```
 
 ## Requirements
@@ -63,22 +61,22 @@ brew services start container
 
 ## Commands
 
-### `gump run` (daemon mode)
+### `roadrunner run` (daemon mode)
 
-Runs continuously, auto-provisioning ephemeral runners for each job. Reads credentials from `~/.gump/config.yaml`.
+Runs continuously, auto-provisioning ephemeral runners for each job. Reads credentials from `~/.roadrunner/config.yaml`.
 
 ```bash
-gump run
+roadrunner run
 ```
 
 Ctrl-C to stop gracefully.
 
-### `gump run-once` (single-shot)
+### `roadrunner run-once` (single-shot)
 
 Runs one container for one job using a manual registration token.
 
 ```bash
-gump run-once --token <TOKEN> --url https://github.com/owner/repo
+roadrunner run-once --token <TOKEN> --url https://github.com/owner/repo
 ```
 
 ## GitHub App Setup
@@ -94,14 +92,14 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed instructions.
 
 ## Configuration
 
-All config lives at `~/.gump/config.yaml`:
+All config lives at `~/.roadrunner/config.yaml`:
 
 ```yaml
 app-id: 12345
 installation-id: 67890
-private-key: ~/.gump/private-key.pem
+private-key: ~/.roadrunner/private-key.pem
 url: https://github.com/your-org
-image: ghcr.io/argylebits/gump-runner:latest
+image: ghcr.io/argylebits/roadrunner:latest
 labels: self-hosted,linux
 cpus: 2
 memory: 4096
@@ -126,7 +124,7 @@ See [docs/workflow-templates/](docs/workflow-templates/) for more examples.
 
 ## Running as a Service
 
-Gump can run as a launchd service on your Mac, starting automatically on boot. See [docs/SETUP.md](docs/SETUP.md#running-as-a-background-service-launchd) for instructions.
+Roadrunner can run as a launchd service on your Mac, starting automatically on boot. See [docs/SETUP.md](docs/SETUP.md#running-as-a-background-service-launchd) for instructions.
 
 ## Documentation
 

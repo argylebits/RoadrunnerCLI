@@ -34,7 +34,7 @@ struct JWTGenerator {
             Data(signingInput.utf8) as CFData,
             &error
         ) as Data? else {
-            throw GumpError.jwtSigningFailed(error?.takeRetainedValue().localizedDescription ?? "Unknown error")
+            throw RoadrunnerError.jwtSigningFailed(error?.takeRetainedValue().localizedDescription ?? "Unknown error")
         }
 
         let encodedSignature = Self.base64urlEncode(signature)
@@ -47,7 +47,7 @@ struct JWTGenerator {
         let base64 = lines.joined()
 
         guard let derData = Data(base64Encoded: base64) else {
-            throw GumpError.invalidPrivateKey("Failed to decode PEM base64 data")
+            throw RoadrunnerError.invalidPrivateKey("Failed to decode PEM base64 data")
         }
 
         let attributes: [String: Any] = [
@@ -58,7 +58,7 @@ struct JWTGenerator {
 
         var error: Unmanaged<CFError>?
         guard let key = SecKeyCreateWithData(derData as CFData, attributes as CFDictionary, &error) else {
-            throw GumpError.invalidPrivateKey(error?.takeRetainedValue().localizedDescription ?? "Unknown error")
+            throw RoadrunnerError.invalidPrivateKey(error?.takeRetainedValue().localizedDescription ?? "Unknown error")
         }
 
         return key

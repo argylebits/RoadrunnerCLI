@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Gump",
+    name: "Roadrunner",
     platforms: [
         .macOS(.v15)
     ],
@@ -11,19 +11,19 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "gump",
+            name: "roadrunner",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
-            path: "Sources/Gump",
+            path: "Sources/Roadrunner",
             resources: [
                 .copy("Resources/runner-boot.sh"),
             ]
         ),
         .testTarget(
-            name: "GumpTests",
-            dependencies: ["gump"],
-            path: "Tests/GumpTests"
+            name: "RoadrunnerTests",
+            dependencies: ["roadrunner"],
+            path: "Tests/RoadrunnerTests"
         ),
     ]
 )
