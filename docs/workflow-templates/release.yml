@@ -10,7 +10,7 @@ permissions:
 jobs:
   build-binary:
     name: Build macOS binary
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
