@@ -9,7 +9,8 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  build-binary:
+    name: Build macOS binary
     runs-on: [self-hosted, macOS, ARM64]
     steps:
       - uses: actions/checkout@v4
@@ -37,19 +38,43 @@ jobs:
             --install-location / \
             roadrunner-${VERSION}-installer.pkg
 
-      - name: Build runner image
-        run: |
-          cd images
-          container build \
-            -t ghcr.io/argylebits/roadrunner:latest \
-            -t ghcr.io/argylebits/roadrunner:${GITHUB_REF_NAME#v} \
-            -f Containerfile -m 4G .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            roadrunner-macos-arm64.tar.gz
+            roadrunner-*-installer.pkg
 
-      - name: Push runner image
+  build-image:
+    name: Build container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push image
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | container login ghcr.io -u "${{ github.actor }}" --password-stdin
-          container image push ghcr.io/argylebits/roadrunner:latest
-          container image push ghcr.io/argylebits/roadrunner:${GITHUB_REF_NAME#v}
+          VERSION=${GITHUB_REF_NAME#v}
+          docker build \
+            -t ghcr.io/argylebits/roadrunner:latest \
+            -t ghcr.io/argylebits/roadrunner:${VERSION} \
+            -f images/Containerfile \
+            images/
+          docker push ghcr.io/argylebits/roadrunner:latest
+          docker push ghcr.io/argylebits/roadrunner:${VERSION}
+
+  release:
+    name: Create release & update Homebrew
+    needs: [build-binary, build-image]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
 
       - name: Create GitHub Release
         run: |
