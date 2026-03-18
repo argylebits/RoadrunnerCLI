@@ -72,6 +72,7 @@ struct RunCommand: AsyncParsableCommand {
 
         // Graceful shutdown on SIGINT/SIGTERM
         let shouldStop = ManagedAtomic(false)
+        let currentContainerName = ManagedValue<String?>(nil)
 
         let sigintSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
         sigintSource.setEventHandler {
@@ -79,16 +80,23 @@ struct RunCommand: AsyncParsableCommand {
                 print("\n[gump] Force quitting...")
                 _exit(1)
             }
-            print("\n[gump] Received SIGINT, will exit after current container finishes...")
+            print("\n[gump] Received SIGINT, shutting down...")
             shouldStop.value = true
+            if let name = currentContainerName.value {
+                print("[gump] Stopping container \(name)...")
+                ContainerRunner.stopContainer(name: name)
+            }
         }
         signal(SIGINT, SIG_IGN)
         sigintSource.resume()
 
         let sigtermSource = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
         sigtermSource.setEventHandler {
-            print("\n[gump] Received SIGTERM, will exit after current container finishes...")
+            print("\n[gump] Received SIGTERM, shutting down...")
             shouldStop.value = true
+            if let name = currentContainerName.value {
+                ContainerRunner.stopContainer(name: name)
+            }
         }
         signal(SIGTERM, SIG_IGN)
         sigtermSource.resume()
@@ -107,14 +115,20 @@ struct RunCommand: AsyncParsableCommand {
                     memoryMB: memory
                 )
 
-                let exitCode = try await runner.run()
-                if exitCode != 0 {
+                let exitCode = try await runner.run { name, _ in
+                    currentContainerName.value = name
+                }
+                currentContainerName.value = nil
+
+                if exitCode != 0 && !shouldStop.value {
                     print("[gump] Runner exited with code \(exitCode)")
                 }
             } catch {
-                print("[gump] Error: \(error)")
-                print("[gump] Retrying in 10 seconds...")
-                try? await Task.sleep(for: .seconds(10))
+                if !shouldStop.value {
+                    print("[gump] Error: \(error)")
+                    print("[gump] Retrying in 10 seconds...")
+                    try? await Task.sleep(for: .seconds(10))
+                }
             }
 
             if !shouldStop.value {
@@ -140,6 +154,21 @@ final class ManagedAtomic: @unchecked Sendable {
     }
 
     var value: Bool {
+        get { lock.withLock { _value } }
+        set { lock.withLock { _value = newValue } }
+    }
+}
+
+/// Simple thread-safe wrapper for an optional value.
+final class ManagedValue<T>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _value: T
+
+    init(_ value: T) {
+        _value = value
+    }
+
+    var value: T {
         get { lock.withLock { _value } }
         set { lock.withLock { _value = newValue } }
     }

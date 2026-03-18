@@ -7,28 +7,25 @@ struct ContainerRunner {
     let image: String
     let cpus: Int
     let memoryMB: Int
-    func run() async throws -> Int32 {
-        let containerID = "gump-\(UUID().uuidString.prefix(8).lowercased())"
 
-        // Write boot script to temp location
-        let tmpDir = FileManager.default.temporaryDirectory.appending(path: containerID)
-        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: tmpDir) }
+    func run(onStart: ((_ containerName: String, _ process: Process) -> Void)? = nil) async throws -> Int32 {
+        let containerName = "gump-\(UUID().uuidString.prefix(8).lowercased())"
 
         guard let bundledScript = Bundle.module.url(forResource: "runner-boot", withExtension: "sh") else {
             throw GumpError.missingBootScript
         }
         let bootScript = try String(contentsOf: bundledScript, encoding: .utf8)
 
-        print("[gump] Starting container \(containerID)...")
+        print("[gump] Starting container \(containerName)...")
 
         let process = Process()
         process.executableURL = URL(filePath: "/usr/local/bin/container")
         process.arguments = [
             "run", "--rm",
+            "--name", containerName,
             "-e", "RUNNER_TOKEN=\(token)",
             "-e", "REPO_URL=\(repoURL)",
-            "-e", "RUNNER_NAME=\(containerID)",
+            "-e", "RUNNER_NAME=\(containerName)",
             "-e", "RUNNER_LABELS=\(labels.joined(separator: ","))",
             "-e", "DEBIAN_FRONTEND=noninteractive",
             "-c", "\(cpus)",
@@ -41,11 +38,27 @@ struct ContainerRunner {
         process.standardError = FileHandle.standardError
 
         try process.run()
-        process.waitUntilExit()
+        onStart?(containerName, process)
 
-        let exitCode = process.terminationStatus
-        print("[gump] Container \(containerID) exited with code \(exitCode)")
+        let exitCode = await withCheckedContinuation { continuation in
+            process.terminationHandler = { proc in
+                continuation.resume(returning: proc.terminationStatus)
+            }
+        }
+
+        print("[gump] Container \(containerName) exited with code \(exitCode)")
         return exitCode
+    }
+
+    /// Stop a container via the container CLI
+    static func stopContainer(name: String) {
+        let stop = Process()
+        stop.executableURL = URL(filePath: "/usr/local/bin/container")
+        stop.arguments = ["stop", name]
+        stop.standardOutput = FileHandle.nullDevice
+        stop.standardError = FileHandle.nullDevice
+        try? stop.run()
+        stop.waitUntilExit()
     }
 }
 
