@@ -1,0 +1,12 @@
+# Gump configuration
+# Copy to ~/.gump/config.yaml and fill in your values.
+# CLI flags override these values.
+
+app-id: 12345
+installation-id: 67890
+private-key: ~/.gump/private-key.pem
+url: https://github.com/your-org
+image: gump-runner:latest
+labels: self-hosted,linux
+cpus: 2
+memory: 4096

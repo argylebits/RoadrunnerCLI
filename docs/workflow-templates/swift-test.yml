@@ -1,0 +1,30 @@
+# Swift CI — runs on a Gump self-hosted Linux runner
+#
+# Prerequisites:
+#   - Gump daemon running (`gump run ...`)
+#   - gump-runner:latest image built (has Swift pre-installed)
+#
+# Usage:
+#   Copy this file to your repo at .github/workflows/swift-test.yml
+#   Adjust the triggers, working-directory, and build/test commands as needed.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test

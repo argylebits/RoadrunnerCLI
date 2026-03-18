@@ -52,6 +52,11 @@ struct ContainerRunner {
 enum GumpError: Error, CustomStringConvertible {
     case missingBootScript
     case containerFailed(Int32)
+    case invalidPrivateKey(String)
+    case jwtSigningFailed(String)
+    case gitHubAPIError(String)
+    case invalidURL(String)
+    case missingConfig(String)
 
     var description: String {
         switch self {
@@ -59,6 +64,16 @@ enum GumpError: Error, CustomStringConvertible {
             "Boot script not found in bundle"
         case .containerFailed(let code):
             "Container exited with code \(code)"
+        case .invalidPrivateKey(let reason):
+            "Invalid private key: \(reason)"
+        case .jwtSigningFailed(let reason):
+            "JWT signing failed: \(reason)"
+        case .gitHubAPIError(let reason):
+            "GitHub API error: \(reason)"
+        case .invalidURL(let url):
+            "Invalid GitHub URL: \(url). Expected https://github.com/owner/repo or https://github.com/org"
+        case .missingConfig(let field):
+            "Missing required config: --\(field) (set via CLI flag or ~/.gump/config.yaml)"
         }
     }
 }

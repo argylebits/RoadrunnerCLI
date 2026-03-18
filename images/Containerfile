@@ -1,0 +1,45 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies for Swift and actions/runner
+RUN apt-get update -qq && \
+    apt-get install -y -qq \
+    curl gpg sudo git jq tar gzip unzip \
+    binutils gnupg2 libcurl4-openssl-dev libedit2 \
+    libgcc-13-dev libpython3-dev libstdc++-13-dev \
+    libxml2-dev libncurses-dev libz3-dev \
+    pkg-config tzdata zlib1g-dev \
+    libicu-dev > /dev/null && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create runner user
+RUN useradd -m -s /bin/bash runner && \
+    echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Install Swift via swiftly (as runner user)
+USER runner
+WORKDIR /home/runner
+RUN curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
+    tar zxf swiftly-$(uname -m).tar.gz && \
+    ./swiftly init --quiet-shell-followup --skip-install && \
+    export PATH="$HOME/.local/share/swiftly/bin:$PATH" && \
+    swiftly install latest -y && \
+    rm -f swiftly-$(uname -m).tar.gz swiftly
+
+# Install GitHub Actions runner
+RUN ARCH=$(uname -m) && \
+    case $ARCH in \
+        aarch64|arm64) RUNNER_ARCH="arm64" ;; \
+        x86_64)        RUNNER_ARCH="x64" ;; \
+    esac && \
+    RUNNER_VERSION=$(curl -s https://api.github.com/repos/actions/runner/releases/latest | jq -r '.tag_name' | sed 's/^v//') && \
+    mkdir -p /home/runner/actions-runner && \
+    cd /home/runner/actions-runner && \
+    curl -sL "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz" | tar xz
+
+# Symlink actual Swift toolchain binaries (not swiftly wrappers) to /usr/local/bin
+USER root
+RUN for bin in swift swiftc swift-build swift-test swift-run swift-package swift-frontend sourcekit-lsp; do \
+        ln -sf /home/runner/.local/share/swiftly/toolchains/6.2.4/usr/bin/$bin /usr/local/bin/$bin; \
+    done
