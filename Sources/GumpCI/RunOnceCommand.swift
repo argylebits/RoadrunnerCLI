@@ -14,18 +14,25 @@ struct RunOnceCommand: AsyncParsableCommand {
     var url: String
 
     @Option(help: "Comma-separated runner labels")
-    var labels: String = "self-hosted,linux"
+    var labels: String?
 
     @Option(help: "Container image to use")
-    var image: String = "ubuntu:24.04"
+    var image: String?
 
     @Option(help: "CPU count for the container")
-    var cpus: Int = 2
+    var cpus: Int?
 
     @Option(help: "Memory in MB for the container")
-    var memory: Int = 4096
+    var memory: Int?
 
     mutating func run() async throws {
+        let config = GumpConfig.load()
+
+        let labels = labels ?? config.labels ?? "self-hosted,linux"
+        let image = image ?? config.image ?? "gump-runner:latest"
+        let cpus = cpus ?? config.cpus ?? 2
+        let memory = memory ?? config.memory ?? 4096
+
         let runner = ContainerRunner(
             token: token,
             repoURL: url,

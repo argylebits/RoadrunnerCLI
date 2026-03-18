@@ -39,7 +39,8 @@ struct GumpConfig: Codable {
 
             guard let colonIndex = trimmed.firstIndex(of: ":") else { continue }
             let key = trimmed[..<colonIndex].trimmingCharacters(in: .whitespaces)
-            let value = trimmed[trimmed.index(after: colonIndex)...].trimmingCharacters(in: .whitespaces)
+            let afterColon = trimmed.index(after: colonIndex)
+            let value = String(trimmed[afterColon...]).trimmingCharacters(in: .whitespaces)
 
             switch key {
             case "app-id":

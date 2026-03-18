@@ -67,6 +67,18 @@ struct ConfigTests {
         #expect(config.url == nil)
     }
 
+    @Test("Handles colons in URL values")
+    func colonsInValues() throws {
+        let yaml = "url: https://github.com/myorg"
+        let tmpFile = FileManager.default.temporaryDirectory.appending(path: "gump-test-colons.yaml")
+        try yaml.write(to: tmpFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tmpFile) }
+
+        let config = GumpConfig.loadFrom(path: tmpFile.path())
+
+        #expect(config.url == "https://github.com/myorg")
+    }
+
     @Test("Returns empty config for missing file")
     func missingFile() {
         let config = GumpConfig.loadFrom(path: "/nonexistent/config.yaml")
