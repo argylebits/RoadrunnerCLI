@@ -40,6 +40,7 @@ RUN ARCH=$(uname -m) && \
 
 # Symlink actual Swift toolchain binaries (not swiftly wrappers) to /usr/local/bin
 USER root
-RUN for bin in swift swiftc swift-build swift-test swift-run swift-package swift-frontend sourcekit-lsp; do \
-        ln -sf /home/runner/.local/share/swiftly/toolchains/6.2.4/usr/bin/$bin /usr/local/bin/$bin; \
+RUN TOOLCHAIN=$(ls /home/runner/.local/share/swiftly/toolchains/ | head -1) && \
+    for bin in swift swiftc swift-build swift-test swift-run swift-package swift-frontend sourcekit-lsp; do \
+        ln -sf /home/runner/.local/share/swiftly/toolchains/$TOOLCHAIN/usr/bin/$bin /usr/local/bin/$bin; \
     done
