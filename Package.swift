@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "GumpCI",
+    name: "Gump",
     platforms: [
         .macOS(.v15)
     ],
@@ -15,7 +15,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
-            path: "Sources/GumpCI",
+            path: "Sources/Gump",
             resources: [
                 .copy("Resources/runner-boot.sh"),
             ]

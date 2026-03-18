@@ -29,7 +29,7 @@ container run --rm ubuntu:24.04 echo "hello"
 ### 3. Build Gump
 
 ```bash
-cd /path/to/GumpCI
+cd /path/to/Gump
 swift build -c release
 ```
 
@@ -218,7 +218,7 @@ No Swift installation step required.
 ### Update Gump
 
 ```bash
-cd /path/to/GumpCI
+cd /path/to/Gump
 git pull
 swift build -c release
 sudo cp .build/release/gump /usr/local/bin/gump
@@ -230,7 +230,7 @@ launchctl load ~/Library/LaunchAgents/com.argylebits.gump.plist
 ### Update the runner image (new Swift version, etc.)
 
 ```bash
-cd /path/to/GumpCI/images
+cd /path/to/Gump/images
 # Edit the Containerfile if needed
 container build --no-cache -t gump-runner:latest -f Containerfile -m 4G .
 # Restart gump — the next container will use the new image
