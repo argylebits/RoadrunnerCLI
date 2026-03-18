@@ -1,6 +1,20 @@
 import Foundation
 
 struct ContainerRunner {
+    /// Resolve the container CLI path, checking common install locations
+    static let containerCLI: String = {
+        let candidates = [
+            "/usr/local/bin/container",
+            "/opt/homebrew/bin/container",
+        ]
+        for path in candidates {
+            if FileManager.default.isExecutableFile(atPath: path) {
+                return path
+            }
+        }
+        return "container"  // fall back to PATH lookup
+    }()
+
     let token: String
     let repoURL: String
     let labels: [String]
@@ -19,7 +33,7 @@ struct ContainerRunner {
         print("[gump] Starting container \(containerName)...")
 
         let process = Process()
-        process.executableURL = URL(filePath: "/usr/local/bin/container")
+        process.executableURL = URL(filePath: Self.containerCLI)
         process.arguments = [
             "run", "--rm",
             "--name", containerName,
@@ -53,7 +67,7 @@ struct ContainerRunner {
     /// Stop a container via the container CLI
     static func stopContainer(name: String) {
         let stop = Process()
-        stop.executableURL = URL(filePath: "/usr/local/bin/container")
+        stop.executableURL = URL(filePath: Self.containerCLI)
         stop.arguments = ["stop", name]
         stop.standardOutput = FileHandle.nullDevice
         stop.standardError = FileHandle.nullDevice

@@ -10,17 +10,26 @@
 
 ### 1. Install the container CLI
 
-Download `container-*-installer-signed.pkg` from the releases page. Double-click to install. It installs to `/usr/local/bin/container`.
+**Option A: Homebrew (recommended)**
 
-### 2. Start the container system
+```bash
+brew install container
+brew services start container
+```
+
+This installs the CLI and starts the container system as a background service (auto-starts on login).
+
+**Option B: Manual install**
+
+Download `container-*-installer-signed.pkg` from https://github.com/apple/container/releases. Double-click to install. Then start the container system:
 
 ```bash
 container system start
 ```
 
-This downloads a Linux kernel and starts background services. Say **Y** when prompted to install the default kernel.
+Say **Y** when prompted to install the default kernel.
 
-Verify it works:
+**Verify it works:**
 
 ```bash
 container run --rm ubuntu:24.04 echo "hello"

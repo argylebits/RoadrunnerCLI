@@ -53,6 +53,18 @@ gump run
 - [`container` CLI](https://github.com/apple/container/releases) (v0.10.0+)
 - A [GitHub App](#github-app-setup) for automatic token management
 
+### Installing the container CLI
+
+```bash
+# Option A: Homebrew (recommended)
+brew install container
+brew services start container
+
+# Option B: Manual
+# Download the .pkg from https://github.com/apple/container/releases
+# Then run: container system start
+```
+
 ## Commands
 
 ### `gump run` (daemon mode)
