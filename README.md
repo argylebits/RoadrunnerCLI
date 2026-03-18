@@ -30,11 +30,15 @@ Each job gets a clean environment. Nothing leaks between runs.
 ## Quick Start
 
 ```bash
-# Install
+# Install the container CLI (requires macOS 26+ on Apple Silicon)
+brew install container
+brew services start container
+
+# Install Roadrunner
 brew tap argylebits/tap
 brew install roadrunner
 
-# Configure
+# Configure (walks you through GitHub App setup)
 roadrunner init
 
 # Run
@@ -46,18 +50,6 @@ roadrunner run
 - macOS 26+ on Apple Silicon
 - [`container` CLI](https://github.com/apple/container/releases) (v0.10.0+)
 - A [GitHub App](#github-app-setup) for automatic token management
-
-### Installing the container CLI
-
-```bash
-# Option A: Homebrew (recommended)
-brew install container
-brew services start container
-
-# Option B: Manual
-# Download the .pkg from https://github.com/apple/container/releases
-# Then run: container system start
-```
 
 ## Commands
 
@@ -92,7 +84,7 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed instructions.
 
 ## Configuration
 
-All config lives at `~/.roadrunner/config.yaml`:
+Run `roadrunner init` to create `~/.roadrunner/config.yaml` interactively. Or edit it manually:
 
 ```yaml
 app-id: 12345
@@ -131,3 +123,7 @@ Roadrunner can run as a launchd service on your Mac, starting automatically on b
 - [Setup Guide](docs/SETUP.md) — full installation and configuration walkthrough
 - [Workflow Templates](docs/workflow-templates/) — ready-to-use GitHub Actions workflows
 - [Example Config](docs/config.example.yaml) — annotated config file
+
+## License
+
+Apache 2.0 — see [LICENSE](LICENSE).
