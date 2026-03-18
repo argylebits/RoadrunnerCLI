@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build release binary
+        run: swift build -c release
+
+      - name: Create installer package
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          mkdir -p /tmp/gump-pkg/usr/local/bin
+          cp .build/release/gump /tmp/gump-pkg/usr/local/bin/
+          pkgbuild \
+            --root /tmp/gump-pkg \
+            --identifier com.argylebits.gump \
+            --version "$VERSION" \
+            --install-location / \
+            gump-${VERSION}-installer.pkg
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Gump $VERSION" \
+            --generate-notes \
+            gump-${VERSION}-installer.pkg
