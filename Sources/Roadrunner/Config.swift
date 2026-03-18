@@ -10,8 +10,12 @@ struct RoadrunnerConfig: Codable {
     var cpus: Int?
     var memory: Int?
 
+    /// Config directory. Overridable via `ROADRUNNER_HOME` environment variable.
     static let configDir: URL = {
-        FileManager.default.homeDirectoryForCurrentUser.appending(path: ".roadrunner")
+        if let override = ProcessInfo.processInfo.environment["ROADRUNNER_HOME"] {
+            return URL(filePath: override)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser.appending(path: ".roadrunner")
     }()
 
     static let configPath: URL = {
