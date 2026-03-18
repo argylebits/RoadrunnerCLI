@@ -72,7 +72,7 @@ struct InitCommand: ParsableCommand {
         // Write config
         var yaml = """
         # Roadrunner configuration
-        # See: https://github.com/ArgyleBits/Roadrunner
+        # See: https://github.com/argylebits/RoadrunnerCLI
 
         app-id: \(appId)
         installation-id: \(installationId)
