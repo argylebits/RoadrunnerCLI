@@ -123,6 +123,9 @@ roadrunner service install
 # Check status
 roadrunner service status
 
+# Restart
+roadrunner service restart
+
 # Remove
 roadrunner service uninstall
 ```

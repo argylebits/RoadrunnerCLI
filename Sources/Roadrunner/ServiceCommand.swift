@@ -5,9 +5,13 @@ struct ServiceCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "service",
         abstract: "Manage the Roadrunner launchd service",
-        subcommands: [InstallService.self, UninstallService.self, StatusService.self]
+        subcommands: [InstallService.self, UninstallService.self, RestartService.self, StatusService.self]
     )
+}
 
+// MARK: - Testable helpers
+
+enum LaunchdPlist {
     static let label = "com.argylebits.roadrunner"
 
     static var plistPath: String {
@@ -15,15 +19,13 @@ struct ServiceCommand: ParsableCommand {
         return "\(home)/Library/LaunchAgents/\(label).plist"
     }
 
-    static var binaryPath: String {
-        // Use the currently running binary's path
+    static func resolveBinaryPath() -> String {
         let executableURL = URL(filePath: ProcessInfo.processInfo.arguments[0])
-        // Resolve symlinks to get the real path
         let resolved = executableURL.resolvingSymlinksInPath()
         return resolved.path()
     }
 
-    static func plistContents(binaryPath: String) -> String {
+    static func generate(binaryPath: String) -> String {
         """
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -53,7 +55,45 @@ struct ServiceCommand: ParsableCommand {
         </plist>
         """
     }
+
+    /// Parse a PID from `launchctl list <label>` output.
+    /// Format: `"PID" = 1234;`
+    static func parsePID(from output: String) -> Int? {
+        guard let range = output.range(of: #""PID" = (\d+);"#, options: .regularExpression) else {
+            return nil
+        }
+        let match = String(output[range])
+        let digits = match.replacingOccurrences(of: "\"PID\" = ", with: "")
+            .replacingOccurrences(of: ";", with: "")
+            .trimmingCharacters(in: .whitespaces)
+        return Int(digits)
+    }
 }
+
+// MARK: - launchctl helpers
+
+private func launchctl(_ args: String...) {
+    let process = Process()
+    process.executableURL = URL(filePath: "/bin/launchctl")
+    process.arguments = Array(args)
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = FileHandle.nullDevice
+    try? process.run()
+    process.waitUntilExit()
+}
+
+private func isServiceLoaded() -> Bool {
+    let process = Process()
+    process.executableURL = URL(filePath: "/bin/launchctl")
+    process.arguments = ["list", LaunchdPlist.label]
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = FileHandle.nullDevice
+    try? process.run()
+    process.waitUntilExit()
+    return process.terminationStatus == 0
+}
+
+// MARK: - Subcommands
 
 struct InstallService: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -65,8 +105,8 @@ struct InstallService: ParsableCommand {
     var force: Bool = false
 
     mutating func run() throws {
-        let plistPath = ServiceCommand.plistPath
-        let binaryPath = ServiceCommand.binaryPath
+        let plistPath = LaunchdPlist.plistPath
+        let binaryPath = LaunchdPlist.resolveBinaryPath()
 
         // Check config exists
         let configPath = RoadrunnerConfig.configPath.path()
@@ -80,12 +120,12 @@ struct InstallService: ParsableCommand {
         }
 
         // Unload existing service if present
-        if isLoaded() {
+        if isServiceLoaded() {
             launchctl("unload", plistPath)
         }
 
         // Write plist
-        let plist = ServiceCommand.plistContents(binaryPath: binaryPath)
+        let plist = LaunchdPlist.generate(binaryPath: binaryPath)
         try plist.write(toFile: plistPath, atomically: true, encoding: .utf8)
 
         // Load the service
@@ -99,27 +139,6 @@ struct InstallService: ParsableCommand {
         print("The daemon will start automatically on login.")
         print("Use `roadrunner service status` to check, `roadrunner service uninstall` to remove.")
     }
-
-    private func isLoaded() -> Bool {
-        let process = Process()
-        process.executableURL = URL(filePath: "/bin/launchctl")
-        process.arguments = ["list", ServiceCommand.label]
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        try? process.run()
-        process.waitUntilExit()
-        return process.terminationStatus == 0
-    }
-
-    private func launchctl(_ args: String...) {
-        let process = Process()
-        process.executableURL = URL(filePath: "/bin/launchctl")
-        process.arguments = Array(args)
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        try? process.run()
-        process.waitUntilExit()
-    }
 }
 
 struct UninstallService: ParsableCommand {
@@ -129,25 +148,36 @@ struct UninstallService: ParsableCommand {
     )
 
     mutating func run() throws {
-        let plistPath = ServiceCommand.plistPath
+        let plistPath = LaunchdPlist.plistPath
 
         guard FileManager.default.fileExists(atPath: plistPath) else {
             throw ServiceError.notInstalled
         }
 
-        // Unload
-        let process = Process()
-        process.executableURL = URL(filePath: "/bin/launchctl")
-        process.arguments = ["unload", plistPath]
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        try? process.run()
-        process.waitUntilExit()
-
-        // Remove plist
+        launchctl("unload", plistPath)
         try FileManager.default.removeItem(atPath: plistPath)
 
         print("Service stopped and removed.")
+    }
+}
+
+struct RestartService: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "restart",
+        abstract: "Restart the launchd service"
+    )
+
+    mutating func run() throws {
+        let plistPath = LaunchdPlist.plistPath
+
+        guard FileManager.default.fileExists(atPath: plistPath) else {
+            throw ServiceError.notInstalled
+        }
+
+        launchctl("unload", plistPath)
+        launchctl("load", plistPath)
+
+        print("Service restarted.")
     }
 }
 
@@ -158,7 +188,7 @@ struct StatusService: ParsableCommand {
     )
 
     mutating func run() throws {
-        let plistPath = ServiceCommand.plistPath
+        let plistPath = LaunchdPlist.plistPath
 
         guard FileManager.default.fileExists(atPath: plistPath) else {
             print("Not installed.")
@@ -167,7 +197,7 @@ struct StatusService: ParsableCommand {
 
         let process = Process()
         process.executableURL = URL(filePath: "/bin/launchctl")
-        process.arguments = ["list", ServiceCommand.label]
+        process.arguments = ["list", LaunchdPlist.label]
 
         let pipe = Pipe()
         process.standardOutput = pipe
@@ -180,12 +210,8 @@ struct StatusService: ParsableCommand {
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             let output = String(data: data, encoding: .utf8) ?? ""
 
-            // Parse PID from launchctl list output
-            // Format: { "Label" = "..."; "PID" = 1234; ... }
-            if let pidRange = output.range(of: #""PID" = (\d+)"#, options: .regularExpression) {
-                let pidStr = output[pidRange]
-                    .replacingOccurrences(of: "\"PID\" = ", with: "")
-                print("Running (PID \(pidStr)).")
+            if let pid = LaunchdPlist.parsePID(from: output) {
+                print("Running (PID \(pid)).")
             } else {
                 print("Installed but not currently running.")
             }
@@ -208,7 +234,7 @@ enum ServiceError: Error, CustomStringConvertible {
         case .noConfig:
             "No config found. Run `roadrunner init` first."
         case .alreadyInstalled:
-            "Service already installed at \(ServiceCommand.plistPath) (use --force to overwrite)"
+            "Service already installed at \(LaunchdPlist.plistPath) (use --force to overwrite)"
         case .notInstalled:
             "Service is not installed."
         }

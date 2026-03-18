@@ -161,6 +161,9 @@ roadrunner service status
 # View logs
 tail -f /tmp/roadrunner.log
 
+# Restart
+roadrunner service restart
+
 # Reinstall (e.g. after upgrading roadrunner)
 roadrunner service install --force
 
