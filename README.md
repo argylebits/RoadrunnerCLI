@@ -36,7 +36,7 @@ brew services start container
 
 # Install Roadrunner
 brew tap argylebits/tap
-brew install roadrunner
+brew install roadrunner-cli
 
 # Configure (walks you through GitHub App setup)
 roadrunner init
