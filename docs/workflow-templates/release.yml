@@ -99,7 +99,7 @@ jobs:
           SHA_ARM64=$(shasum -a 256 roadrunner-macos-arm64.tar.gz | awk '{print $1}')
 
           FORMULA=$(cat <<RUBY
-          class Roadrunner < Formula
+          class RoadrunnerCli < Formula
             desc "Ephemeral Linux CI runners on macOS"
             homepage "https://github.com/argylebits/Roadrunner"
             version "${VERSION}"
@@ -122,16 +122,16 @@ jobs:
           RUBY
           )
 
-          EXISTING=$(gh api repos/argylebits/homebrew-tap/contents/Formula/roadrunner.rb --jq '.sha' 2>/dev/null || echo "")
+          EXISTING=$(gh api repos/argylebits/homebrew-tap/contents/Formula/roadrunner-cli.rb --jq '.sha' 2>/dev/null || echo "")
 
           if [ -n "$EXISTING" ]; then
-            gh api -X PUT repos/argylebits/homebrew-tap/contents/Formula/roadrunner.rb \
-              -f message="Update roadrunner formula to ${VERSION}" \
+            gh api -X PUT repos/argylebits/homebrew-tap/contents/Formula/roadrunner-cli.rb \
+              -f message="Update roadrunner-cli formula to ${VERSION}" \
               -f content="$(echo "$FORMULA" | base64)" \
               -f sha="$EXISTING"
           else
-            gh api -X PUT repos/argylebits/homebrew-tap/contents/Formula/roadrunner.rb \
-              -f message="Add roadrunner formula ${VERSION}" \
+            gh api -X PUT repos/argylebits/homebrew-tap/contents/Formula/roadrunner-cli.rb \
+              -f message="Add roadrunner-cli formula ${VERSION}" \
               -f content="$(echo "$FORMULA" | base64)"
           fi
         env:
