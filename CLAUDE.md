@@ -32,11 +32,12 @@ swift test
 Gump/
 ├── Package.swift
 ├── Sources/Gump/
-│   ├── GumpCI.swift                     # @main entry point
+│   ├── Gump.swift                       # @main entry point
 │   ├── RunCommand.swift                 # `run` daemon subcommand
 │   ├── RunOnceCommand.swift             # `run-once` single-shot subcommand
 │   ├── ContainerRunner.swift            # Shells out to `container run`, error types
 │   ├── Config.swift                     # Loads ~/.gump/config.yaml
+│   ├── Preflight.swift                  # Checks container CLI and system status
 │   ├── GitHubAuth/
 │   │   ├── JWTGenerator.swift           # RS256 JWT via Security.framework
 │   │   ├── TokenManager.swift           # Installation token caching/refresh
