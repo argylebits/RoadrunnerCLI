@@ -39,11 +39,7 @@ mkdir -p ~/.gump
 cp docs/config.example.yaml ~/.gump/config.yaml
 # Edit ~/.gump/config.yaml with your GitHub App credentials
 
-# Build the runner image (one-time, includes Swift + GitHub Actions runner)
-cd images
-container build -t gump-runner:latest -f Containerfile -m 4G .
-
-# Run
+# Run (pulls the runner image automatically on first launch)
 gump run
 ```
 
@@ -105,7 +101,7 @@ app-id: 12345
 installation-id: 67890
 private-key: ~/.gump/private-key.pem
 url: https://github.com/your-org
-image: gump-runner:latest
+image: ghcr.io/argylebits/gump-runner:latest
 labels: self-hosted,linux
 cpus: 2
 memory: 4096

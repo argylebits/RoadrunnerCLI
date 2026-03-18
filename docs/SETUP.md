@@ -53,7 +53,7 @@ sudo cp .build/release/gump /usr/local/bin/gump
 
 ```bash
 cd images
-container build -t gump-runner:latest -f Containerfile -m 4G .
+container build -t ghcr.io/argylebits/gump-runner:latest -f Containerfile -m 4G .
 ```
 
 This takes a few minutes (downloads Swift ~950MB). The image is cached locally after the first build.
@@ -90,7 +90,7 @@ app-id: 12345
 installation-id: 67890
 private-key: ~/.gump/private-key.pem
 url: https://github.com/your-org
-image: gump-runner:latest
+image: ghcr.io/argylebits/gump-runner:latest
 labels: self-hosted,linux
 cpus: 2
 memory: 4096
@@ -114,7 +114,7 @@ gump run \
   --installation-id <INSTALLATION_ID> \
   --private-key ~/.gump/private-key.pem \
   --url https://github.com/<org-or-owner/repo> \
-  --image gump-runner:latest
+  --image ghcr.io/argylebits/gump-runner:latest
 ```
 
 The daemon will loop: register a runner, wait for a job, run it, clean up, repeat. Ctrl-C to stop gracefully (stops the container and exits). Ctrl-C again to force quit.
@@ -131,7 +131,7 @@ For quick testing without a GitHub App:
 gump run-once \
   --token <TOKEN> \
   --url https://github.com/<org-or-owner/repo> \
-  --image gump-runner:latest
+  --image ghcr.io/argylebits/gump-runner:latest
 ```
 
 ## Running as a Background Service (launchd)
@@ -211,7 +211,7 @@ tail -f /tmp/gump.err
 
 Gump runs any GitHub Actions workflow — it's language-agnostic. Just set `runs-on: [self-hosted, linux]`.
 
-The `gump-runner:latest` image has Swift pre-installed:
+The `ghcr.io/argylebits/gump-runner:latest` image has Swift pre-installed:
 
 ```yaml
 jobs:
@@ -254,13 +254,13 @@ launchctl load ~/Library/LaunchAgents/com.argylebits.gump.plist
 
 ```bash
 cd /path/to/Gump/images
-container build --no-cache -t gump-runner:latest -f Containerfile -m 4G .
+container build --no-cache -t ghcr.io/argylebits/gump-runner:latest -f Containerfile -m 4G .
 # Restart gump — the next container will use the new image
 ```
 
 #### Keeping the image up to date
 
-The `gump-runner:latest` image pins to `swiftly install latest` and the latest `actions/runner` at build time. Options for staying current:
+The `ghcr.io/argylebits/gump-runner:latest` image pins to `swiftly install latest` and the latest `actions/runner` at build time. Options for staying current:
 
 - **Manual rebuild** — run `container build --no-cache ...` when you want a new Swift version. Simplest approach; Swift releases are infrequent.
 - **Scheduled rebuild** — create a cron job or launchd timer that rebuilds the image weekly/monthly.

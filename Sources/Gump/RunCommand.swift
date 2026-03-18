@@ -51,7 +51,7 @@ struct RunCommand: AsyncParsableCommand {
         }
 
         let labels = labels ?? config.labels ?? "self-hosted,linux"
-        let image = image ?? config.image ?? "gump-runner:latest"
+        let image = image ?? config.image ?? "ghcr.io/argylebits/gump-runner:latest"
         let cpus = cpus ?? config.cpus ?? 2
         let memory = memory ?? config.memory ?? 4096
 

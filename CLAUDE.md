@@ -66,7 +66,7 @@ Gump/
 - **`swift-argument-parser`** is the only dependency
 - **GitHub App auth** for daemon mode — JWT signing via Security.framework (RS256), no additional dependencies
 - **Config file** at `~/.gump/config.yaml` — CLI flags override config values
-- **Custom container image** (`gump-runner:latest`) — Ubuntu 24.04 + Swift + actions/runner pre-installed for fast startup
+- **Custom container image** (`ghcr.io/argylebits/gump-runner:latest`) — Ubuntu 24.04 + Swift + actions/runner pre-installed for fast startup
 - **Boot script** detects pre-installed runner (custom image) or falls back to downloading everything (bare Ubuntu)
 
 ## Key Constraints
@@ -100,7 +100,7 @@ swift test
 
 # Build custom runner image
 cd images
-container build -t gump-runner:latest -f Containerfile -m 4G .
+container build -t ghcr.io/argylebits/gump-runner:latest -f Containerfile -m 4G .
 ```
 
 No code signing needed — Approach B uses the already-signed `container` CLI.
