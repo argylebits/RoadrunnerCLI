@@ -28,12 +28,12 @@ RUN curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz 
     rm -f swiftly-$(uname -m).tar.gz swiftly
 
 # Install GitHub Actions runner
+ARG RUNNER_VERSION=2.333.0
 RUN ARCH=$(uname -m) && \
     case $ARCH in \
         aarch64|arm64) RUNNER_ARCH="arm64" ;; \
         x86_64)        RUNNER_ARCH="x64" ;; \
     esac && \
-    RUNNER_VERSION=$(curl -s https://api.github.com/repos/actions/runner/releases/latest | jq -r '.tag_name' | sed 's/^v//') && \
     mkdir -p /home/runner/actions-runner && \
     cd /home/runner/actions-runner && \
     curl -sL "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz" | tar xz
