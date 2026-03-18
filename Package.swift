@@ -11,7 +11,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "gumpci",
+            name: "gump",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],

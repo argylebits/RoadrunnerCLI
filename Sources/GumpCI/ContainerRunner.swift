@@ -8,7 +8,7 @@ struct ContainerRunner {
     let cpus: Int
     let memoryMB: Int
     func run() async throws -> Int32 {
-        let containerID = "gumpci-\(UUID().uuidString.prefix(8).lowercased())"
+        let containerID = "gump-\(UUID().uuidString.prefix(8).lowercased())"
 
         // Write boot script to temp location
         let tmpDir = FileManager.default.temporaryDirectory.appending(path: containerID)
@@ -16,11 +16,11 @@ struct ContainerRunner {
         defer { try? FileManager.default.removeItem(at: tmpDir) }
 
         guard let bundledScript = Bundle.module.url(forResource: "runner-boot", withExtension: "sh") else {
-            throw GumpCIError.missingBootScript
+            throw GumpError.missingBootScript
         }
         let bootScript = try String(contentsOf: bundledScript, encoding: .utf8)
 
-        print("[gumpci] Starting container \(containerID)...")
+        print("[gump] Starting container \(containerID)...")
 
         let process = Process()
         process.executableURL = URL(filePath: "/usr/local/bin/container")
@@ -44,12 +44,12 @@ struct ContainerRunner {
         process.waitUntilExit()
 
         let exitCode = process.terminationStatus
-        print("[gumpci] Container \(containerID) exited with code \(exitCode)")
+        print("[gump] Container \(containerID) exited with code \(exitCode)")
         return exitCode
     }
 }
 
-enum GumpCIError: Error, CustomStringConvertible {
+enum GumpError: Error, CustomStringConvertible {
     case missingBootScript
     case containerFailed(Int32)
 

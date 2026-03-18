@@ -1,9 +1,9 @@
 import ArgumentParser
 
 @main
-struct GumpCI: AsyncParsableCommand {
+struct Gump: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "gumpci",
+        commandName: "gump",
         abstract: "Ephemeral Linux CI runners on macOS",
         subcommands: [RunOnceCommand.self]
     )
