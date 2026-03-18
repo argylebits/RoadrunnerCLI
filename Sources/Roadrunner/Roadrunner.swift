@@ -6,6 +6,6 @@ struct Roadrunner: AsyncParsableCommand {
         commandName: "roadrunner",
         abstract: "Ephemeral Linux CI runners on macOS",
         version: appVersion,
-        subcommands: [InitCommand.self, RunOnceCommand.self, RunCommand.self]
+        subcommands: [InitCommand.self, RunOnceCommand.self, RunCommand.self, ServiceCommand.self]
     )
 }

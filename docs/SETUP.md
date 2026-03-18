@@ -144,67 +144,28 @@ container system start
 
 The container CLI registers itself with launchd automatically when you run `container system start`. It will start on login going forward.
 
-### 2. Create the launchd plist
-
-Create `~/Library/LaunchAgents/com.argylebits.roadrunner.plist`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.argylebits.roadrunner</string>
-
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/roadrunner</string>
-        <string>run</string>
-    </array>
-
-    <key>RunAtLoad</key>
-    <true/>
-
-    <key>KeepAlive</key>
-    <true/>
-
-    <key>StandardOutPath</key>
-    <string>/tmp/roadrunner.log</string>
-
-    <key>StandardErrorPath</key>
-    <string>/tmp/roadrunner.err</string>
-</dict>
-</plist>
-```
-
-All configuration is read from `~/.roadrunner/config.yaml`.
-
-### 3. Load the service
+### 2. Install the service
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
+roadrunner service install
 ```
 
-### 4. Verify it's running
+This creates a launchd plist at `~/Library/LaunchAgents/com.argylebits.roadrunner.plist`, loads it, and starts the daemon. It will restart automatically on login.
+
+### 3. Managing the service
 
 ```bash
-launchctl list | grep roadrunner
-tail -f /tmp/roadrunner.log
-```
-
-### 5. Managing the service
-
-```bash
-# Stop
-launchctl unload ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
-
-# Restart (unload then load)
-launchctl unload ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
-launchctl load ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
+# Check status
+roadrunner service status
 
 # View logs
 tail -f /tmp/roadrunner.log
-tail -f /tmp/roadrunner.err
+
+# Reinstall (e.g. after upgrading roadrunner)
+roadrunner service install --force
+
+# Remove
+roadrunner service uninstall
 ```
 
 ## Workflow Configuration
@@ -241,13 +202,10 @@ See `docs/workflow-templates/` for ready-to-use examples.
 ### Update Roadrunner
 
 ```bash
-cd /path/to/Roadrunner
-git pull
-swift build -c release
-sudo cp .build/release/roadrunner /usr/local/bin/roadrunner
-# Restart the service if running via launchd
-launchctl unload ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
-launchctl load ~/Library/LaunchAgents/com.argylebits.roadrunner.plist
+brew upgrade roadrunner
+
+# Reinstall the service to pick up the new binary
+roadrunner service install --force
 ```
 
 ### Update the runner image (new Swift version, etc.)

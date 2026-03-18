@@ -116,7 +116,16 @@ See [docs/workflow-templates/](docs/workflow-templates/) for more examples.
 
 ## Running as a Service
 
-Roadrunner can run as a launchd service on your Mac, starting automatically on boot. See [docs/SETUP.md](docs/SETUP.md#running-as-a-background-service-launchd) for instructions.
+```bash
+# Install and start the launchd service (auto-starts on login)
+roadrunner service install
+
+# Check status
+roadrunner service status
+
+# Remove
+roadrunner service uninstall
+```
 
 ## Documentation
 
