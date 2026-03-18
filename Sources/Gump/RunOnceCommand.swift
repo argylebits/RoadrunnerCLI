@@ -26,6 +26,8 @@ struct RunOnceCommand: AsyncParsableCommand {
     var memory: Int?
 
     mutating func run() async throws {
+        try Preflight.check()
+
         let config = GumpConfig.load()
 
         let labels = labels ?? config.labels ?? "self-hosted,linux"

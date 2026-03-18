@@ -32,6 +32,8 @@ struct RunCommand: AsyncParsableCommand {
     var memory: Int?
 
     mutating func run() async throws {
+        try Preflight.check()
+
         let config = GumpConfig.load()
 
         // Merge CLI flags over config file values
