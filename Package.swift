@@ -17,9 +17,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "Sources/Roadrunner",
-            resources: [
-                .copy("Resources/runner-boot.sh"),
-            ],
+            exclude: ["Resources/runner-boot.sh"],
             plugins: [
                 .plugin(name: "VersionPlugin", package: "swift-version-plugin"),
             ]
