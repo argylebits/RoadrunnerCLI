@@ -19,8 +19,12 @@ struct GumpConfig: Codable {
     }()
 
     static func load() -> GumpConfig {
-        guard FileManager.default.fileExists(atPath: configPath.path()),
-              let contents = try? String(contentsOfFile: configPath.path(), encoding: .utf8) else {
+        loadFrom(path: configPath.path())
+    }
+
+    static func loadFrom(path: String) -> GumpConfig {
+        guard FileManager.default.fileExists(atPath: path),
+              let contents = try? String(contentsOfFile: path, encoding: .utf8) else {
             return GumpConfig()
         }
         return parse(yaml: contents)

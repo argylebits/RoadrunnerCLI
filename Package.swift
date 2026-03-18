@@ -20,5 +20,10 @@ let package = Package(
                 .copy("Resources/runner-boot.sh"),
             ]
         ),
+        .testTarget(
+            name: "GumpTests",
+            dependencies: ["gump"],
+            path: "Tests/GumpTests"
+        ),
     ]
 )

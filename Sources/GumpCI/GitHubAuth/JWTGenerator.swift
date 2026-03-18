@@ -5,6 +5,11 @@ struct JWTGenerator {
     let privateKey: SecKey
     let appID: String
 
+    init(privateKey: SecKey, appID: String) {
+        self.privateKey = privateKey
+        self.appID = appID
+    }
+
     init(pemPath: String, appID: String) throws {
         let pemData = try String(contentsOfFile: pemPath, encoding: .utf8)
         self.privateKey = try Self.loadPrivateKey(pem: pemData)
