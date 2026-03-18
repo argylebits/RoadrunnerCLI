@@ -101,14 +101,14 @@ jobs:
           FORMULA=$(cat <<RUBY
           class RoadrunnerCli < Formula
             desc "Ephemeral Linux CI runners on macOS"
-            homepage "https://github.com/argylebits/Roadrunner"
+            homepage "https://github.com/argylebits/RoadrunnerCLI"
             version "${VERSION}"
             license "Apache-2.0"
 
             depends_on :macos
             depends_on arch: :arm64
 
-            url "https://github.com/argylebits/Roadrunner/releases/download/v#{version}/roadrunner-macos-arm64.tar.gz"
+            url "https://github.com/argylebits/RoadrunnerCLI/releases/download/v#{version}/roadrunner-macos-arm64.tar.gz"
             sha256 "${SHA_ARM64}"
 
             def install
