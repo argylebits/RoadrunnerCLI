@@ -1,5 +1,5 @@
 {
-  "originHash" : "46154bfbce3594d32fab3a4a75d309ac61a26d4231b589e4906021bb46fcf873",
+  "originHash" : "4c8e3214c7f7b1d9c09cedb24ac32534878ec98ada11fcc7a1709670e290438a",
   "pins" : [
     {
       "identity" : "swift-argument-parser",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "c5d11a805e765f52ba34ec7284bd4fcd6ba68615",
         "version" : "1.7.0"
+      }
+    },
+    {
+      "identity" : "swift-version-plugin",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/argylebits/swift-version-plugin",
+      "state" : {
+        "revision" : "97c00ce5ae27228d9a8c90c7b03c96d54b320412",
+        "version" : "1.0.0"
       }
     }
   ],

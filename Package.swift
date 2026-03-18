@@ -8,6 +8,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
+        .package(url: "https://github.com/argylebits/swift-version-plugin", from: "1.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -18,6 +19,9 @@ let package = Package(
             path: "Sources/Roadrunner",
             resources: [
                 .copy("Resources/runner-boot.sh"),
+            ],
+            plugins: [
+                .plugin(name: "VersionPlugin", package: "swift-version-plugin"),
             ]
         ),
         .testTarget(
