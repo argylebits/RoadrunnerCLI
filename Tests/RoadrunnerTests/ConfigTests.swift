@@ -86,4 +86,12 @@ struct ConfigTests {
         #expect(config.appId == nil)
         #expect(config.url == nil)
     }
+
+    @Test("privateKeyPath is inside configDir")
+    func privateKeyPathLocation() {
+        let keyPath = RoadrunnerConfig.privateKeyPath.path
+        let dirPath = RoadrunnerConfig.configDir.path
+        #expect(keyPath.hasPrefix(dirPath))
+        #expect(keyPath.hasSuffix("private-key.pem"))
+    }
 }

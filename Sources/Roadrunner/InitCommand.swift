@@ -181,8 +181,6 @@ struct InitCommand: ParsableCommand {
     // MARK: - Private Key
 
     private func installPrivateKey(_ flagValue: String?) throws {
-        let destination = RoadrunnerConfig.privateKeyPath.path
-
         let sourcePath: String
         if let flagValue {
             sourcePath = flagValue
@@ -190,24 +188,8 @@ struct InitCommand: ParsableCommand {
             sourcePath = try promptString("Path to your private key PEM file (e.g. ~/Downloads/my-app.private-key.pem)")
         }
 
-        let expanded = (sourcePath as NSString).expandingTildeInPath
-
-        guard FileManager.default.fileExists(atPath: expanded) else {
-            throw InitError.fileNotFound(sourcePath)
-        }
-
-        // Remove existing key if present
-        if FileManager.default.fileExists(atPath: destination) {
-            try FileManager.default.removeItem(atPath: destination)
-        }
-
-        try FileManager.default.copyItem(atPath: expanded, toPath: destination)
-
-        // Restrict permissions to owner-only (chmod 600)
-        try FileManager.default.setAttributes(
-            [.posixPermissions: 0o600],
-            ofItemAtPath: destination
-        )
+        let destination = RoadrunnerConfig.privateKeyPath.path
+        try PrivateKeyInstaller.install(from: sourcePath, to: destination)
 
         print("Copied private key to \(destination)")
         print("(your original file at \(sourcePath) has not been modified)")
@@ -250,6 +232,52 @@ enum InitError: Error, CustomStringConvertible {
             "Invalid value for \(field): \(value)"
         case .fileNotFound(let path):
             "File not found: \(path)"
+        }
+    }
+}
+
+enum PrivateKeyInstaller {
+    /// Copy a PEM file to the destination path with chmod 600.
+    /// Handles same-file detection and uses atomic copy-then-rename.
+    static func install(from sourcePath: String, to destination: String) throws {
+        let fm = FileManager.default
+        let expanded = (sourcePath as NSString).expandingTildeInPath
+
+        guard fm.fileExists(atPath: expanded) else {
+            throw InitError.fileNotFound(sourcePath)
+        }
+
+        // Resolve symlinks to detect same-file
+        let resolvedSource = (expanded as NSString).resolvingSymlinksInPath
+        let resolvedDest = (destination as NSString).resolvingSymlinksInPath
+
+        if resolvedSource == resolvedDest {
+            // Source is already the destination — just ensure permissions
+            try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: destination)
+            return
+        }
+
+        // Copy to a temp file first, then rename — avoids data loss if copy fails
+        let tempDest = destination + ".tmp"
+
+        // Clean up any leftover temp file
+        if fm.fileExists(atPath: tempDest) {
+            try fm.removeItem(atPath: tempDest)
+        }
+
+        try fm.copyItem(atPath: expanded, toPath: tempDest)
+
+        // Set permissions on temp file before moving into place
+        try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tempDest)
+
+        // Replace destination atomically
+        if fm.fileExists(atPath: destination) {
+            _ = try fm.replaceItemAt(
+                URL(filePath: destination),
+                withItemAt: URL(filePath: tempDest)
+            )
+        } else {
+            try fm.moveItem(atPath: tempDest, toPath: destination)
         }
     }
 }

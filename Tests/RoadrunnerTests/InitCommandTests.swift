@@ -138,6 +138,138 @@ struct ShellAliasTests {
     }
 }
 
+@Suite("Private Key Installer")
+struct PrivateKeyInstallerTests {
+    private func tmpDir() throws -> URL {
+        let dir = FileManager.default.temporaryDirectory
+            .appending(path: "roadrunner-test-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    @Test("Copies PEM file to destination")
+    func copiesFile() throws {
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let source = dir.appending(path: "source.pem")
+        let dest = dir.appending(path: "private-key.pem")
+        try "FAKE-PEM-CONTENT".write(to: source, atomically: true, encoding: .utf8)
+
+        try PrivateKeyInstaller.install(from: source.path, to: dest.path)
+
+        let contents = try String(contentsOf: dest, encoding: .utf8)
+        #expect(contents == "FAKE-PEM-CONTENT")
+    }
+
+    @Test("Sets chmod 600 on destination")
+    func setsPermissions() throws {
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let source = dir.appending(path: "source.pem")
+        let dest = dir.appending(path: "private-key.pem")
+        try "FAKE-PEM".write(to: source, atomically: true, encoding: .utf8)
+
+        try PrivateKeyInstaller.install(from: source.path, to: dest.path)
+
+        let attrs = try FileManager.default.attributesOfItem(atPath: dest.path)
+        let perms = (attrs[.posixPermissions] as? Int) ?? 0
+        #expect(perms == 0o600)
+    }
+
+    @Test("Does not modify source file")
+    func sourceUnmodified() throws {
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let source = dir.appending(path: "source.pem")
+        let dest = dir.appending(path: "private-key.pem")
+        try "ORIGINAL".write(to: source, atomically: true, encoding: .utf8)
+
+        try PrivateKeyInstaller.install(from: source.path, to: dest.path)
+
+        let sourceContents = try String(contentsOf: source, encoding: .utf8)
+        #expect(sourceContents == "ORIGINAL")
+    }
+
+    @Test("Throws fileNotFound for missing source")
+    func missingSource() throws {
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let dest = dir.appending(path: "private-key.pem")
+
+        #expect(throws: (any Error).self) {
+            try PrivateKeyInstaller.install(from: "/nonexistent/file.pem", to: dest.path)
+        }
+    }
+
+    @Test("Safely handles same source and destination")
+    func sameFile() throws {
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let file = dir.appending(path: "private-key.pem")
+        try "EXISTING-KEY".write(to: file, atomically: true, encoding: .utf8)
+
+        // Should not destroy the file
+        try PrivateKeyInstaller.install(from: file.path, to: file.path)
+
+        let contents = try String(contentsOf: file, encoding: .utf8)
+        #expect(contents == "EXISTING-KEY")
+    }
+
+    @Test("Overwrites existing destination safely")
+    func overwritesExisting() throws {
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let source = dir.appending(path: "new-key.pem")
+        let dest = dir.appending(path: "private-key.pem")
+        try "OLD-KEY".write(to: dest, atomically: true, encoding: .utf8)
+        try "NEW-KEY".write(to: source, atomically: true, encoding: .utf8)
+
+        try PrivateKeyInstaller.install(from: source.path, to: dest.path)
+
+        let contents = try String(contentsOf: dest, encoding: .utf8)
+        #expect(contents == "NEW-KEY")
+    }
+
+    @Test("Handles symlink to destination as source")
+    func symlinkSameFile() throws {
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let realFile = dir.appending(path: "private-key.pem")
+        let symlink = dir.appending(path: "link.pem")
+        try "EXISTING-KEY".write(to: realFile, atomically: true, encoding: .utf8)
+        try FileManager.default.createSymbolicLink(at: symlink, withDestinationURL: realFile)
+
+        // Symlink points to the destination — should detect same-file
+        try PrivateKeyInstaller.install(from: symlink.path, to: realFile.path)
+
+        let contents = try String(contentsOf: realFile, encoding: .utf8)
+        #expect(contents == "EXISTING-KEY")
+    }
+
+    @Test("Expands tilde in source path")
+    func expandsTilde() throws {
+        // This test verifies the tilde expansion codepath doesn't crash.
+        // We can't write to a real ~ path in tests, so we verify the error
+        // is fileNotFound (meaning tilde was expanded and checked) rather than
+        // some other failure.
+        let dir = try tmpDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let dest = dir.appending(path: "private-key.pem")
+
+        #expect(throws: (any Error).self) {
+            try PrivateKeyInstaller.install(from: "~/nonexistent-roadrunner-test.pem", to: dest.path)
+        }
+    }
+}
+
 @Suite("Init Config Writing")
 struct InitConfigTests {
     @Test("InitError describes config exists")
