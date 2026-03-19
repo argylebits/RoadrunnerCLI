@@ -13,7 +13,7 @@ struct RunCommand: AsyncParsableCommand {
     @Option(help: "GitHub App installation ID")
     var installationId: Int?
 
-    @Option(help: "Path to GitHub App private key PEM file")
+    @Option(help: "Path to private key PEM file (default: ~/.roadrunner/private-key.pem)")
     var privateKey: String?
 
     @Option(help: "GitHub repository or organization URL")
@@ -43,9 +43,9 @@ struct RunCommand: AsyncParsableCommand {
         guard let installationId = installationId ?? config.installationId else {
             throw RoadrunnerError.missingConfig("installation-id")
         }
-        guard let privateKey = privateKey ?? config.privateKey else {
-            throw RoadrunnerError.missingConfig("private-key")
-        }
+        let privateKey = privateKey
+            ?? config.privateKey
+            ?? RoadrunnerConfig.privateKeyPath.path
         guard let url = url ?? config.url else {
             throw RoadrunnerError.missingConfig("url")
         }

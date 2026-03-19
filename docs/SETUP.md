@@ -75,25 +75,29 @@ This takes a few minutes (downloads Swift ~950MB). The image is cached locally a
 
 ### 6. Configure Roadrunner
 
-Create the config directory and move your private key:
+Run the setup wizard:
 
 ```bash
-mkdir -p ~/.roadrunner
-mv ~/Downloads/your-app-name.*.private-key.pem ~/.roadrunner/private-key.pem
-chmod 600 ~/.roadrunner/private-key.pem
+roadrunner init
 ```
 
-Create `~/.roadrunner/config.yaml` with your values:
+This will prompt you for:
+- **GitHub App ID** and **Installation ID** (from step 5)
+- **Path to your private key PEM file** (e.g. `~/Downloads/your-app-name.private-key.pem`)
+- Container image, labels, CPU, and memory settings
 
-```yaml
-app-id: 12345
-installation-id: 67890
-private-key: ~/.roadrunner/private-key.pem
-url: https://github.com/your-org
-image: ghcr.io/argylebits/roadrunner:latest
-labels: self-hosted,linux
-cpus: 2
-memory: 4096
+The wizard creates `~/.roadrunner/` and:
+- Copies your private key to `~/.roadrunner/private-key.pem` (chmod 600) — your original file is not modified
+- Writes `~/.roadrunner/config.yaml` with your settings
+
+Or run non-interactively:
+
+```bash
+roadrunner init \
+  --app-id 12345 \
+  --installation-id 67890 \
+  --private-key ~/Downloads/your-app-name.private-key.pem \
+  --url https://github.com/your-org
 ```
 
 An example config is at `docs/config.example.yaml`.

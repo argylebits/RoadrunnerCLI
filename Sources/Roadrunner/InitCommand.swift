@@ -13,7 +13,7 @@ struct InitCommand: ParsableCommand {
     @Option(help: "GitHub App installation ID")
     var installationId: Int?
 
-    @Option(help: "Path to GitHub App private key PEM file")
+    @Option(help: "Path to your GitHub App private key PEM file (will be copied to ~/.roadrunner/)")
     var privateKey: String?
 
     @Option(help: "GitHub repository or organization URL")
@@ -44,6 +44,9 @@ struct InitCommand: ParsableCommand {
         let configDir = RoadrunnerConfig.configDir.path()
         let configPath = RoadrunnerConfig.configPath.path()
 
+        // Create config directory first so files can be placed there during setup
+        try FileManager.default.createDirectory(atPath: configDir, withIntermediateDirectories: true)
+
         // Check for existing config
         if FileManager.default.fileExists(atPath: configPath) && !force {
             if allFlagsProvided {
@@ -59,24 +62,20 @@ struct InitCommand: ParsableCommand {
         // Gather values: use flags, fall back to interactive prompts
         let appId = try self.appId ?? promptInt("GitHub App ID")
         let installationId = try self.installationId ?? promptInt("Installation ID")
-        let privateKey = try resolvePrivateKey(self.privateKey)
+        try installPrivateKey(self.privateKey)
         let url = try resolveURL(self.url)
         let image = self.image ?? promptOptional("Container image", default: "ghcr.io/argylebits/roadrunner:latest")
         let labels = self.labels ?? promptOptional("Runner labels", default: "self-hosted,linux")
         let cpus = self.cpus ?? promptOptionalInt("CPUs per container", default: 2)
         let memory = self.memory ?? promptOptionalInt("Memory (MB) per container", default: 4096)
 
-        // Create config directory
-        try FileManager.default.createDirectory(atPath: configDir, withIntermediateDirectories: true)
-
-        // Write config
+        // Write config (private key is always at ~/.roadrunner/private-key.pem)
         var yaml = """
         # Roadrunner configuration
         # See: https://github.com/argylebits/RoadrunnerCLI
 
         app-id: \(appId)
         installation-id: \(installationId)
-        private-key: \(privateKey)
         url: \(url)
         image: \(image)
         labels: \(labels)
@@ -89,6 +88,7 @@ struct InitCommand: ParsableCommand {
 
         print("")
         print("Config written to \(configPath)")
+        print("Private key at \(RoadrunnerConfig.privateKeyPath.path)")
         print("Next: run `roadrunner run` to start the daemon.")
 
         // Shell alias
@@ -178,24 +178,42 @@ struct InitCommand: ParsableCommand {
         return line.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("y")
     }
 
-    // MARK: - Validation
+    // MARK: - Private Key
 
-    private func resolvePrivateKey(_ flagValue: String?) throws -> String {
-        let raw: String
+    private func installPrivateKey(_ flagValue: String?) throws {
+        let destination = RoadrunnerConfig.privateKeyPath.path
+
+        let sourcePath: String
         if let flagValue {
-            raw = flagValue
+            sourcePath = flagValue
         } else {
-            raw = try promptString("Private key path (e.g. ~/.roadrunner/private-key.pem)")
+            sourcePath = try promptString("Path to your private key PEM file (e.g. ~/Downloads/my-app.private-key.pem)")
         }
 
-        let expanded = (raw as NSString).expandingTildeInPath
+        let expanded = (sourcePath as NSString).expandingTildeInPath
 
         guard FileManager.default.fileExists(atPath: expanded) else {
-            throw InitError.fileNotFound(raw)
+            throw InitError.fileNotFound(sourcePath)
         }
 
-        return raw
+        // Remove existing key if present
+        if FileManager.default.fileExists(atPath: destination) {
+            try FileManager.default.removeItem(atPath: destination)
+        }
+
+        try FileManager.default.copyItem(atPath: expanded, toPath: destination)
+
+        // Restrict permissions to owner-only (chmod 600)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: destination
+        )
+
+        print("Copied private key to \(destination)")
+        print("(your original file at \(sourcePath) has not been modified)")
     }
+
+    // MARK: - Validation
 
     private func resolveURL(_ flagValue: String?) throws -> String {
         let raw: String

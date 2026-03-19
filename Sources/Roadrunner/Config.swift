@@ -22,6 +22,11 @@ struct RoadrunnerConfig: Codable {
         configDir.appending(path: "config.yaml")
     }()
 
+    /// Private key is always at ~/.roadrunner/private-key.pem (copied there by `init`)
+    static let privateKeyPath: URL = {
+        configDir.appending(path: "private-key.pem")
+    }()
+
     static func load() -> RoadrunnerConfig {
         loadFrom(path: configPath.path())
     }
