@@ -84,18 +84,21 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed instructions.
 
 ## Configuration
 
-Run `roadrunner init` to create `~/.roadrunner/config.yaml` interactively. Or edit it manually:
+Run `roadrunner init` to set up `~/.roadrunner/`. The wizard asks for your GitHub App details and the path to your private key PEM file, then copies it into place:
 
-```yaml
-app-id: 12345
-installation-id: 67890
-private-key: ~/.roadrunner/private-key.pem
-url: https://github.com/your-org
-image: ghcr.io/argylebits/roadrunner:latest
-labels: self-hosted,linux
-cpus: 2
-memory: 4096
+```bash
+roadrunner init
+# or non-interactively:
+roadrunner init --app-id 12345 --installation-id 67890 \
+  --private-key ~/Downloads/my-app.private-key.pem \
+  --url https://github.com/your-org
 ```
+
+This creates:
+- `~/.roadrunner/config.yaml` — app ID, installation ID, URL, image, labels, etc.
+- `~/.roadrunner/private-key.pem` — your GitHub App private key (chmod 600)
+
+The private key is always stored at `~/.roadrunner/private-key.pem`. The `--private-key` flag on `init` is the *source* path — the file you downloaded from GitHub. Your original file is not modified.
 
 CLI flags override config values. See [docs/config.example.yaml](docs/config.example.yaml).
 

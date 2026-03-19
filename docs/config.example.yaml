@@ -1,6 +1,8 @@
 # Roadrunner configuration
-# Copy to ~/.roadrunner/config.yaml and fill in your values.
-# CLI flags override these values.
+# Created by `roadrunner init`. CLI flags override these values.
+#
+# The private key is copied to ~/.roadrunner/private-key.pem by `roadrunner init`.
+# You can override the path here if needed.
 
 app-id: 12345
 installation-id: 67890
