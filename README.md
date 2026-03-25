@@ -3,6 +3,9 @@
 
 # Roadrunner
 
+<!-- Fresco image -->
+![RoadrunnerCLI](https://pub-d60dc12417c74d04b3dd6a1ed43e02c4.r2.dev/roadrunner-cli/2026-03-25-182427.jpg)
+
 Ephemeral Linux CI runners on macOS. Beep beep!
 
 Roadrunner spins up throwaway Linux containers on your Mac (via Apple's [Containerization framework](https://github.com/apple/containerization)), runs a GitHub Actions job inside each one, and destroys it when done. No persistent runners, no stale state, no Docker required.
